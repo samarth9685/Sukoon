@@ -24,7 +24,11 @@ mongoose.connect(process.env.MONGO_URI)
 const PORT = process.env.PORT || 5004; // Use port from .env or default to 5004
 
 // --- Middleware ---
-app.use(cors()); // Enable Cross-Origin Resource Sharing for all requests
+app.use(cors({
+  origin: "https://sukoon-frontend-a8d3.onrender.com", // replace with actual URL
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
 app.use((req, res, next) => {
   console.log("Incoming request:", req.method, req.originalUrl);
   next();
