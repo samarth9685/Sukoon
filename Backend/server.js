@@ -3,13 +3,8 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const path = require("path");
 require("dotenv").config(); // Load environment variables from .env file
-
-// Import routes
-const authRoutes = require("./routes/auth"); // Routes for user authentication/profile management
-// You will add more route imports here for other data types (blogs, articles, quizzes, etc.)
-// const blogRoutes = require("./routes/blog");
-// const articleRoutes = require("./routes/article");
 
 const app = express(); // Initialize Express application
 
@@ -21,36 +16,76 @@ mongoose.connect(process.env.MONGO_URI)
     process.exit(1); // Exit process with failure if DB connection fails
   });
 
-const PORT = process.env.PORT || 5004; // Use port from .env or default to 5004
+const PORT = process.env.PORT || 5004;
 
 // --- Middleware ---
 app.use(cors({
-  origin: "https://sukoon-frontend-a8d3.onrender.com", // replace with actual URL
+  origin: "*", // For development, allow all origins or set specific frontend URL
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
-app.use((req, res, next) => {
-  console.log("Incoming request:", req.method, req.originalUrl);
-  next();
-});
-
-app.use(express.json()); // Parse incoming JSON request bodies
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use("/api/users", require("./routes/user"));
-app.use("/api/contact",require("./routes/contact"));
 
 // --- API Routes ---
-// Register your auth routes under the /api/auth path
-app.use("/api/auth", authRoutes);
+app.use("/api/users", require("./routes/user"));
+app.use("/api/contact", require("./routes/contact"));
+app.use("/api/auth", require("./routes/auth"));
 
-// You will register other routes here as you create them:
-// app.use("/api/blogs", blogRoutes);
-// app.use("/api/articles", articleRoutes);
-// app.use("/api/quizzes", quizRoutes);
+// --- Serve Frontend ---
+const frontendPath = path.join(__dirname, "../Frontend/dist");
+app.use(express.static(frontendPath));
 
-// Optional: Basic root route for testing server status
-app.get("/", (req, res) => {
-  res.send("🎉 Mental Health App Backend API is running!");
+// --- React Router fallback ---
+app.get("*", (req, res) => {
+  res.sendFile(path.join(frontendPath, "index.html"));
+});
+
+// --- Start the Server ---
+app.listen(PORT, () => {
+  console.log(`🚀 Server is running on port ${PORT}`);
+});
+// backend/server.js
+
+const express = require("express");
+const cors = require("cors");
+const mongoose = require("mongoose");
+const path = require("path");
+require("dotenv").config(); // Load environment variables from .env file
+
+const app = express(); // Initialize Express application
+
+// --- MongoDB Connection ---
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('✅ MongoDB connected successfully!'))
+  .catch((err) => {
+    console.error('❌ MongoDB connection failed:', err.message);
+    process.exit(1); // Exit process with failure if DB connection fails
+  });
+
+const PORT = process.env.PORT || 5004;
+
+// --- Middleware ---
+app.use(cors({
+  origin: "*", // For development, allow all origins or set specific frontend URL
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// --- API Routes ---
+app.use("/api/users", require("./routes/user"));
+app.use("/api/contact", require("./routes/contact"));
+app.use("/api/auth", require("./routes/auth"));
+
+// --- Serve Frontend ---
+const frontendPath = path.join(__dirname, "../Frontend/dist");
+app.use(express.static(frontendPath));
+
+// --- React Router fallback ---
+app.get("*", (req, res) => {
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
 
 // --- Start the Server ---
