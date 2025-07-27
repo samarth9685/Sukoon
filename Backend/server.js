@@ -1,12 +1,10 @@
 // backend/server.js
-
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const path = require("path");
-require("dotenv").config(); // Load environment variables from .env file
+require("dotenv").config();
 
-const app = express(); // Initialize Express application
 
 // --- MongoDB Connection ---
 mongoose.connect(process.env.MONGO_URI)
