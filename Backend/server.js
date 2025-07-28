@@ -3,8 +3,13 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const path = require("path");
 require("dotenv").config(); // Load environment variables from .env file
+
+// Import routes
+const authRoutes = require("./routes/auth"); // Routes for user authentication/profile management
+// You will add more route imports here for other data types (blogs, articles, quizzes, etc.)
+// const blogRoutes = require("./routes/blog");
+// const articleRoutes = require("./routes/article");
 
 const app = express(); // Initialize Express application
 
@@ -16,29 +21,34 @@ mongoose.connect(process.env.MONGO_URI)
     process.exit(1); // Exit process with failure if DB connection fails
   });
 
-const PORT = process.env.PORT || 5004;
+const PORT = process.env.PORT || 5004; // Use port from .env or default to 5004
 
 // --- Middleware ---
 app.use(cors({
-  origin: "*", // For development, allow all origins or set specific frontend URL
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
-}));
-app.use(express.json());
+  origin: "https://sukoon1-frontend.onrender.com", // or "*" for testing only
+})); // Enable Cross-Origin Resource Sharing for all requests
+app.use((req, res, next) => {
+  console.log("Incoming request:", req.method, req.originalUrl);
+  next();
+});
+
+app.use(express.json()); // Parse incoming JSON request bodies
 app.use(express.urlencoded({ extended: true }));
+app.use("/api/users", require("./routes/user"));
+app.use("/api/contact",require("./routes/contact"));
 
 // --- API Routes ---
-app.use("/api/users", require("./routes/user"));
-app.use("/api/contact", require("./routes/contact"));
-app.use("/api/auth", require("./routes/auth"));
+// Register your auth routes under the /api/auth path
+app.use("/api/auth", authRoutes);
 
-// --- Serve Frontend ---
-const frontendPath = path.join(__dirname, "../Frontend/dist");
-app.use(express.static(frontendPath));
+// You will register other routes here as you create them:
+// app.use("/api/blogs", blogRoutes);
+// app.use("/api/articles", articleRoutes);
+// app.use("/api/quizzes", quizRoutes);
 
-// --- React Router fallback ---
-app.get("*", (req, res) => {
-  res.sendFile(path.join(frontendPath, "index.html"));
+// Optional: Basic root route for testing server status
+app.get("/", (req, res) => {
+  res.send("🎉 Mental Health App Backend API is running!");
 });
 
 // --- Start the Server ---
